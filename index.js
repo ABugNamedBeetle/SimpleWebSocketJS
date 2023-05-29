@@ -27,13 +27,19 @@ wsServer.on('connection', (socket, request) => {
     };
     socket.onmessage = (me) => {
         console.log("Recevied from " + wsID + " : " + me.data.toString());
-        wsClients.forEach((client, clientID) => {
-            client.onclose;
-            if (wsID !== clientID) {
-                console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}`);
-                client.send(me.data);
-            }
-        });
+        if (me.data.toString() === "-ok-") {
+            //only reply to sender
+            socket.send(me.data);
+        }
+        else {
+            wsClients.forEach((client, clientID) => {
+                client.onclose;
+                if (wsID !== clientID) {
+                    console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}`);
+                    client.send(me.data);
+                }
+            });
+        }
     };
     socket.onclose = (ee) => {
         if (wsClients.has(wsID)) {

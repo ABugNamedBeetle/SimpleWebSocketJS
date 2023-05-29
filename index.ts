@@ -29,16 +29,23 @@ wsServer.on('connection',(socket: WebSocket.WebSocket, request: IncomingMessage)
     }
     socket.onmessage = (me: WebSocket.MessageEvent)=>{
         console.log("Recevied from "+ wsID+" : "+ me.data.toString());
-        
-        wsClients.forEach((client: WebSocket.WebSocket, clientID: string)=>{
-            client.onclose
+       
+        if(me.data.toString() === "-ok-"){
+            //only reply to sender
+            socket.send(me.data);
+
+        }else{
+
+            wsClients.forEach((client: WebSocket.WebSocket, clientID: string)=>{
+                client.onclose
+                
+                if(wsID !== clientID ){
+                    console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}` )
+                    client.send(me.data);
+                }
+            });
+        }        
             
-            if(wsID !== clientID ){
-                console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}` )
-                client.send(me.data);
-            }
-        })
-        
 
     }
 
