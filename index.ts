@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Express, Request, Response } from 'express';
 import WebSocket, { EventEmitter } from "ws";
 import {IncomingMessage} from "http"; 
 
@@ -8,7 +8,13 @@ const wsServer = new WebSocket.Server({
 })
 
 let wsClients = new Map<string, WebSocket.WebSocket>();
-
+const exServer: Express = express();
+exServer.get('/health', (req: Request, res: Response) => {
+    res.send('OK');
+  }); 
+ exServer.listen(80,()=>{
+    console.log(`⚡️[server]: HTTP Server is listening on 80`);
+ })
 // function getUniqueID(){
 //     function s4() {
 //         return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -62,4 +68,4 @@ wsServer.on('connection',(socket: WebSocket.WebSocket, request: IncomingMessage)
 });
 
 
-console.log( (new Date()) + " Server is listening on port " + PORT);
+console.log( (new Date()) + " Websocket Server is listening on port " + PORT);
