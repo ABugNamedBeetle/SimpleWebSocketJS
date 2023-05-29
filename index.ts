@@ -40,6 +40,12 @@ wsServer.on('connection',(socket: WebSocket.WebSocket, request: IncomingMessage)
 
     }
 
+    socket.onclose = (ee: WebSocket.CloseEvent)=>{
+       if(wsClients.has(wsID)){
+            console.log( wsClients.delete(wsID) ? `${wsID} disconnected`: null)
+       }
+    }
+
 });
 
 console.log( (new Date()) + " Server is listening on port " + PORT);
