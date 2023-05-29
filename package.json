@@ -4,7 +4,8 @@
   "description": "simple websocket app",
   "main": "index.js",
   "scripts": {
-    "start": "npx tsc && node index.js"
+    "build": "npm tsc",
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
