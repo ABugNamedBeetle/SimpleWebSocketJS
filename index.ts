@@ -31,6 +31,8 @@ wsServer.on('connection',(socket: WebSocket.WebSocket, request: IncomingMessage)
         console.log("Recevied from "+ wsID+" : "+ me.data.toString());
         
         wsClients.forEach((client: WebSocket.WebSocket, clientID: string)=>{
+            client.onclose
+            
             if(wsID !== clientID ){
                 console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}` )
                 client.send(me.data);
@@ -40,12 +42,17 @@ wsServer.on('connection',(socket: WebSocket.WebSocket, request: IncomingMessage)
 
     }
 
+    
     socket.onclose = (ee: WebSocket.CloseEvent)=>{
+        
        if(wsClients.has(wsID)){
             console.log( wsClients.delete(wsID) ? `${wsID} disconnected`: null)
        }
+       console.log("Connected sockets: " + [...wsClients.keys()].join(","));
+       
     }
 
 });
+
 
 console.log( (new Date()) + " Server is listening on port " + PORT);

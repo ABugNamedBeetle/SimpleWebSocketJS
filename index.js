@@ -9,13 +9,12 @@ const wsServer = new ws_1.default.Server({
     port: PORT
 });
 let wsClients = new Map();
-function getUniqueID() {
-    function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-    }
-    return s4() + s4() + '-' + s4();
-}
-;
+// function getUniqueID(){
+//     function s4() {
+//         return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+//     }
+//     return s4() + s4() + '-' + s4();
+// };
 wsServer.on('connection', (socket, request) => {
     var _a;
     let wsID = (_a = request.url) === null || _a === void 0 ? void 0 : _a.trim().substring(1);
@@ -29,11 +28,18 @@ wsServer.on('connection', (socket, request) => {
     socket.onmessage = (me) => {
         console.log("Recevied from " + wsID + " : " + me.data.toString());
         wsClients.forEach((client, clientID) => {
+            client.onclose;
             if (wsID !== clientID) {
                 console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}`);
                 client.send(me.data);
             }
         });
+    };
+    socket.onclose = (ee) => {
+        if (wsClients.has(wsID)) {
+            console.log(wsClients.delete(wsID) ? `${wsID} disconnected` : null);
+        }
+        console.log("Connected sockets: " + [...wsClients.keys()].join(","));
     };
 });
 console.log((new Date()) + " Server is listening on port " + PORT);
