@@ -1,13 +1,15 @@
-import WebSocket, { EventEmitter } from "ws";
-import {IncomingMessage} from "http"; 
-import { SocketInputMessage,SocketOutputMessage,MessageType } from "./App/Modals";
+import { EventEmitter, WebSocketServer, WebSocket, Event as OpenEvent, MessageEvent, CloseEvent, CLOSED } from 'ws';
 
-const PORT:number = 5000;
-const wsServer = new WebSocket.Server({
+import { IncomingMessage } from "http";
+import { SocketMessage, MessageType, WebSocketClient } from "./App/Modals";
+import { messageWorker } from "./App/MessageWorker"
+
+const PORT: number = 5000;
+const wsServer = new WebSocketServer({
     port: PORT
 })
 
-let wsClients = new Map<string, WebSocket.WebSocket>();
+let wsClientList = new Array<WebSocketClient>();
 
 // function getUniqueID(){
 //     function s4() {
@@ -16,87 +18,57 @@ let wsClients = new Map<string, WebSocket.WebSocket>();
 //     return s4() + s4() + '-' + s4();ndklfngl
 // };
 
-wsServer.on('connection',(socket: WebSocket.WebSocket, request: IncomingMessage)=>{
-    let wsID: string = request.url?.trim().substring(1)!;
-    console.log(`A client just connected : ${wsID}` );
-    if(!wsClients.has(wsID)){
+wsServer.on('connection', (socket: WebSocket, request: IncomingMessage) => {
+
+    let fullURL = new URL(request.url!.trim(), "ws://create.url");
+    let name = fullURL.pathname.substring(1);
+    let mtype = fullURL.searchParams.get('type')!;
+    let channel = fullURL.searchParams.get('channel')!;
     
-        wsClients.set(wsID, socket);
-    }
+   
     
-    socket.onopen = (event: WebSocket.Event)=>{
-        console.log("socket opened"); 
-        
-    }
-    socket.onmessage = (me: WebSocket.MessageEvent)=>{
-        console.log("Recevied from "+ wsID+" : "+ me.data.toString());
-        var imsg:SocketInputMessage;
-        try {
-             imsg = <SocketInputMessage> JSON.parse(me.data.toString());
-             messageWorker(imsg, wsID, socket);
-        } catch (error) {
-            var rep  = new SocketOutputMessage("response","wrong format",wsID);
-            socket.send(JSON.stringify(rep));
-            console.log(`[ ERROR ] Wrong Format Received from ${wsID} : Wrong Format Response sent to ${wsID}`);
+    if (!wsClientList.find(c => c.name === name && c.mtype === mtype && c.channel === channel) ) {
+
+        wsClientList.push(new WebSocketClient(name, mtype, channel, socket));
+
+        console.log(`A client just connected : [${channel}]-${name}-${mtype}`);
+
+        socket.onopen = (event: OpenEvent) => {
+            console.log("socket opened");
+
+        }
+        socket.onclose = (ee: CloseEvent) => {
+
+            let loc: number = wsClientList.findIndex(c => c.name === name && c.mtype === mtype && c.channel === channel);
+            if (loc !== -1) {
+                console.log(wsClientList.splice(loc, 1) ? `[ Disconnected ] Client Disconnected [${channel}]-${name}-${mtype}` : null)
+            }
+            console.log("Connected sockets: " + wsClientList.map(cl => `${cl.channel}-${cl.name}`).join(","));
         }
 
-       
-        
-        // if(me.data.toString() === "-ok-"){
-        //     //only reply to sender
-        //     socket.send(me.data);
+        socket.onmessage = (me: MessageEvent) => {
+            console.log(`Recevied from ${name} : ${me.data.toString()}`);
+            var imsg: SocketMessage;
+            try {
+                imsg = <SocketMessage> JSON.parse(me.data.toString());
+                messageWorker(imsg, name, channel, socket, wsClientList);
+            } catch (error) {
+                var rep = new SocketMessage("response", "wrong format", name);
+                socket.send(JSON.stringify(rep));
+                console.log(`[ ERROR ] Wrong Format Received from ${name} : Wrong Format Response sent`);
+            }
+        }
+    } else {
 
-        // }else{
 
-        //     wsClients.forEach((client: WebSocket.WebSocket, clientID: string)=>{
-        //         client.onclose
-                
-        //         if(wsID !== clientID ){
-        //             console.log(`Message sent from ${wsID} to ${clientID} : ${me.data}` )
-        //             client.send(me.data);
-        //         }
-        //     });
-        // }        
-            
-
+        var rep = new SocketMessage("response", "Client Already Exists!", name);
+        socket.send(JSON.stringify(rep));
+        socket.close(1003, "Client Already Exists!");
     }
 
-    
-    socket.onclose = (ee: WebSocket.CloseEvent)=>{
-        
-       if(wsClients.has(wsID)){
-            console.log( wsClients.delete(wsID) ? `${wsID} disconnected`: null)
-       }
-       console.log("Connected sockets: " + [...wsClients.keys()].join(","));
-       
-    }
 
 });
 
 
-console.log( (new Date()) + " Websocket Server is listening on port " + PORT);
+console.log((new Date()) + " Websocket Server is listening on port " + PORT);
 
-function messageWorker(imsg: SocketInputMessage, wsID: string, socket: WebSocket.WebSocket){
-    switch (imsg.type) {
-        case MessageType.HEALTH:
-            var rep  = new SocketOutputMessage(MessageType.RESPONSE,"-HEALTH-OK-",wsID);
-            socket.send(JSON.stringify(rep));
-            console.log(`Response Sent to  ${wsID} : ${"-HEALTH-OK-"}`);
-            break;
-    
-        case MessageType.BROADCAST:
-            var blist = [...wsClients.keys()].filter((c)=>{return c !== wsID });
-            console.log(`Input Message will be broadcasted to ${wsClients.size-1} : ${blist.join(",")}`);
-            wsClients.forEach((client: WebSocket.WebSocket, clientID: string)=>{
-                                              
-                        if(wsID !== clientID ){
-                            
-                            var rep  = new SocketOutputMessage(MessageType.RESPONSE,imsg.message,clientID, wsID);
-                            client.send(JSON.stringify(rep));
-                            console.log(`Response Sent to  ${clientID} : ${imsg.message}`);
-                        }
-                    });   
-        default:
-            break;
-    }
-}
