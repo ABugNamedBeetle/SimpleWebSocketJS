@@ -2,7 +2,7 @@
 import {WebSocket} from "ws";
 export class SocketMessage{
     type: string;
-    message: string;
+    message: string; //always encoded
     destination: string;
     origin:string;
     correlationID: string | null = null;
@@ -10,9 +10,13 @@ export class SocketMessage{
 
     constructor(_type: string, _message: string, _destination: string, _origin: string = "server"){
         this.type = _type;
-        this.message = _message;
+        this.message = atob(_message);
         this.destination = _destination;
         this.origin = _origin;
+    }
+
+    getMessage(){
+        return btoa(this.message);
     }
    
 }

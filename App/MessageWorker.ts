@@ -7,7 +7,7 @@ import { SocketMessage, MessageType, WebSocketClient } from "./Modals";
 export function messageWorker(imsg: SocketMessage, wsName: string, wsChanne: string, socket: WebSocket, wsClientList: Array<WebSocketClient>) {
     switch (imsg.type) {
         case MessageType.HEALTH:
-            var rep = new SocketMessage(MessageType.HEALTHRESPONSE, "LUhFQUxUSC1PSy0=", wsName);
+            var rep = new SocketMessage(MessageType.HEALTHRESPONSE, "-HEALTH-OK-", wsName);
             socket.send(JSON.stringify(rep));
             console.log(`Response Sent to  ${wsName} : ${"-HEALTH-OK-"}`);
             break;
