@@ -5,7 +5,7 @@ const Modals_1 = require("./Modals");
 function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
     switch (imsg.type) {
         case Modals_1.MessageType.HEALTH:
-            var rep = new Modals_1.SocketMessage(Modals_1.MessageType.HEALTHRESPONSE, "LUhFQUxUSC1PSy0=", wsName);
+            var rep = new Modals_1.SocketMessage(Modals_1.MessageType.HEALTHRESPONSE, "-HEALTH-OK-", wsName);
             socket.send(JSON.stringify(rep));
             console.log(`Response Sent to  ${wsName} : ${"-HEALTH-OK-"}`);
             break;

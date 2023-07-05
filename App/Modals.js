@@ -6,9 +6,13 @@ class SocketMessage {
         this.correlationID = null;
         this.integrity = null;
         this.type = _type;
-        this.message = _message;
+        this.message = Buffer.from(_message, 'utf8').toString('base64');
+        ;
         this.destination = _destination;
         this.origin = _origin;
+    }
+    getMessage() {
+        return Buffer.from(this.message, 'base64').toString('utf8');
     }
 }
 exports.SocketMessage = SocketMessage;
