@@ -2,6 +2,7 @@
 import {WebSocket} from "ws";
 export class SocketMessage{
     type: string;
+    subType: MessageSubType = MessageSubType.EMPTY;
     message: string; //always encoded
     destination: string;
     origin:string;
@@ -15,6 +16,13 @@ export class SocketMessage{
         this.origin = _origin;
     }
 
+    setMessageSubType(sub: MessageSubType){
+        this.subType = sub;
+        return this;
+    }
+    
+
+
     getMessage(){
         return Buffer.from(this.message, 'base64').toString('utf8');
     }
@@ -27,7 +35,7 @@ export class WebSocketClient{
     mtype: string;
     channel: string;
     ws: WebSocket;
-    constructor(name: string, mtype: string, channel: string, ws: WebSocket){
+    constructor(name: string, mtype: MemberType, channel: string, ws: WebSocket){
         this.name = name;
         this.mtype = mtype;
         this.channel = channel;
@@ -40,7 +48,29 @@ export enum MessageType{
     HEALTHRESPONSE = "healthresponse",
     //input types
     REQUEST = "request",
+   
+     //peer health
     BROADCAST = "broadcast",
     //output types
     RESPONSE = "response"
+}
+
+export enum MessageSubType{
+    //reuests
+    CREATESESSION = "createsession", //create sesison with peer in message type
+   
+    PEERLIST="peerlist",
+    
+    //response
+    SESSIONCREATED = "sessioncreated",
+    LISTPEER="listpeer",
+
+    //neural
+    SESSIONHEALTH = "sessionhealth", 
+    EMPTY = "empty"
+}
+
+export enum MemberType{
+    SLAVE = "SLAVE",
+    MASTER = "MASTER"
 }

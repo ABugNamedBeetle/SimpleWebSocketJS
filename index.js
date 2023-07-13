@@ -17,7 +17,7 @@ let wsClientList = new Array();
 wsServer.on('connection', (socket, request) => {
     let fullURL = new URL(request.url.trim(), "ws://create.url");
     let name = fullURL.pathname.substring(1);
-    let mtype = fullURL.searchParams.get('type');
+    let mtype = fullURL.searchParams.get('type') === "MASTER" ? Modals_1.MemberType.MASTER : Modals_1.MemberType.SLAVE;
     let channel = fullURL.searchParams.get('channel');
     if (!wsClientList.find(c => c.name === name && c.mtype === mtype && c.channel === channel)) {
         wsClientList.push(new Modals_1.WebSocketClient(name, mtype, channel, socket));

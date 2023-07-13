@@ -1,7 +1,7 @@
 import { EventEmitter, WebSocketServer, WebSocket, Event as OpenEvent, MessageEvent, CloseEvent, CLOSED } from 'ws';
 
 import { IncomingMessage } from "http";
-import { SocketMessage, MessageType, WebSocketClient } from "./App/Modals";
+import { SocketMessage, MessageType, WebSocketClient, MemberType } from "./App/Modals";
 import { messageWorker } from "./App/MessageWorker"
 
 const PORT: number = 5000;
@@ -22,7 +22,7 @@ wsServer.on('connection', (socket: WebSocket, request: IncomingMessage) => {
 
     let fullURL = new URL(request.url!.trim(), "ws://create.url");
     let name = fullURL.pathname.substring(1);
-    let mtype = fullURL.searchParams.get('type')!;
+    let mtype = fullURL.searchParams.get('type')! === "MASTER" ? MemberType.MASTER : MemberType.SLAVE;
     let channel = fullURL.searchParams.get('channel')!;
     
    

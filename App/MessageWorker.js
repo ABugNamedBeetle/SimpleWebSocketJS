@@ -21,6 +21,12 @@ function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
                 console.log(`Response Sent to  ${wsName} : Request Failed, Destination Not Found!`);
             }
             break;
+        case Modals_1.MessageType.LISTPEER:
+            let slaveClientsOnChannel = wsClientList.filter(c => c.channel === wsChanne && c.mtype === Modals_1.MemberType.SLAVE);
+            let slaveNames = JSON.stringify(slaveClientsOnChannel.map(s => s.name));
+            let sm = JSON.stringify(new Modals_1.SocketMessage(Modals_1.MessageType.PEERLIST, slaveNames, wsName));
+            socket.send(sm);
+            console.log(`Peer List Sent to  ${wsName} : ${sm}`);
         case Modals_1.MessageType.BROADCAST:
         // var blist = [...wsClients.keys()].filter((c) => { return c !== wsID });
         // console.log(`Input Message will be broadcasted to ${wsClients.size - 1} : ${blist.join(",")}`);

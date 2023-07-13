@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageType = exports.WebSocketClient = exports.SocketMessage = void 0;
+exports.MemberType = exports.MessageType = exports.WebSocketClient = exports.SocketMessage = void 0;
 class SocketMessage {
     constructor(_type, _message, _destination, _origin = "server") {
         this.correlationID = null;
@@ -30,8 +30,15 @@ var MessageType;
     MessageType["HEALTH"] = "health";
     MessageType["HEALTHRESPONSE"] = "healthresponse";
     //input types
+    MessageType["LISTPEER"] = "listpeer";
+    MessageType["PEERLIST"] = "peerlist";
     MessageType["REQUEST"] = "request";
     MessageType["BROADCAST"] = "broadcast";
     //output types
     MessageType["RESPONSE"] = "response";
 })(MessageType = exports.MessageType || (exports.MessageType = {}));
+var MemberType;
+(function (MemberType) {
+    MemberType["SLAVE"] = "SLAVE";
+    MemberType["MASTER"] = "MASTER";
+})(MemberType = exports.MemberType || (exports.MemberType = {}));
