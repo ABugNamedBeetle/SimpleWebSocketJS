@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MemberType = exports.MessageType = exports.WebSocketClient = exports.SocketMessage = void 0;
+exports.MemberType = exports.MessageSubType = exports.MessageType = exports.WebSocketClient = exports.SocketMessage = void 0;
 class SocketMessage {
     constructor(_type, _message, _destination, _origin = "server") {
+        this.subType = MessageSubType.EMPTY;
         this.correlationID = null;
         this.integrity = null;
         this.type = _type;
@@ -10,6 +11,10 @@ class SocketMessage {
         ;
         this.destination = _destination;
         this.origin = _origin;
+    }
+    setMessageSubType(sub) {
+        this.subType = sub;
+        return this;
     }
     getMessage() {
         return Buffer.from(this.message, 'base64').toString('utf8');
@@ -30,13 +35,24 @@ var MessageType;
     MessageType["HEALTH"] = "health";
     MessageType["HEALTHRESPONSE"] = "healthresponse";
     //input types
-    MessageType["LISTPEER"] = "listpeer";
-    MessageType["PEERLIST"] = "peerlist";
     MessageType["REQUEST"] = "request";
+    //peer health
     MessageType["BROADCAST"] = "broadcast";
     //output types
     MessageType["RESPONSE"] = "response";
 })(MessageType = exports.MessageType || (exports.MessageType = {}));
+var MessageSubType;
+(function (MessageSubType) {
+    //reuests
+    MessageSubType["CREATESESSION"] = "createsession";
+    MessageSubType["PEERLIST"] = "peerlist";
+    //response
+    MessageSubType["SESSIONCREATED"] = "sessioncreated";
+    MessageSubType["LISTPEER"] = "listpeer";
+    //neural
+    MessageSubType["SESSIONHEALTH"] = "sessionhealth";
+    MessageSubType["EMPTY"] = "empty";
+})(MessageSubType = exports.MessageSubType || (exports.MessageSubType = {}));
 var MemberType;
 (function (MemberType) {
     MemberType["SLAVE"] = "SLAVE";
