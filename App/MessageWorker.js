@@ -5,31 +5,26 @@ const Modals_1 = require("./Modals");
 function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
     switch (imsg.type) {
         case Modals_1.MessageType.HEALTH:
-            var rep = new Modals_1.SocketMessage(Modals_1.MessageType.HEALTHRESPONSE, "-HEALTH-OK-", wsName);
-            socket.send(JSON.stringify(rep));
-            console.log(`Response Sent to  ${wsName} : ${"-HEALTH-OK-"}`);
+            var hrep = new Modals_1.SocketMessage(Modals_1.MessageType.HEALTHRESPONSE, "-HEALTH-OK-", wsName);
+            messageSender(hrep, socket, "HEALTH RESPONSE");
             break;
         case Modals_1.MessageType.REQUEST:
             switch (imsg.subType) {
                 case Modals_1.MessageSubType.LISTPEER:
-                    let slaveClientsOnChannel = wsClientList.filter(c => c.channel === wsChanne && c.mtype === Modals_1.MemberType.SLAVE);
-                    let slaveNames = JSON.stringify(slaveClientsOnChannel.map(s => s.name));
-                    let sm = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, slaveNames, wsName).setMessageSubType(Modals_1.MessageSubType.PEERLIST);
-                    console.log(sm);
-                    socket.send(JSON.stringify(sm));
-                    console.log(`Peer List Sent to  ${wsName} : ${sm}`);
+                    let slaveNames = JSON.stringify(findSlaveOnChannel().map(s => s.name));
+                    let sm = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, slaveNames, wsName)
+                        .setMessageSubType(Modals_1.MessageSubType.PEERLIST);
+                    messageSender(sm, socket, "PEER LIST RESPONSE");
                     break;
                 case Modals_1.MessageSubType.CREATESESSION:
                     {
-                        let salveClient = wsClientList.find(c => c.name === imsg.destination && c.channel === wsChanne);
+                        let salveClient = findSlaveWithName(imsg.destination);
                         if (salveClient) {
-                            salveClient.ws.send(JSON.stringify(imsg)); // the REQUEST packet will be sent to SLAVE as it is
-                            console.log(`Create Session Request Sent to ${imsg.destination} from ${wsName} on [${wsChanne}]`);
+                            messageSender(imsg, salveClient.ws, "CREATE SESSION REQUEST");
                         }
                         else {
-                            var rep = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, "Create Session Request Failed, Destination Not Found!", wsName);
-                            socket.send(JSON.stringify(rep));
-                            console.log(`Response Sent to  ${wsName} : Create Session Request Failed, Destination Not Found!`);
+                            var failedRep = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, "Create Session Request Failed, Destination Not Found!", wsName);
+                            messageSender(failedRep, socket, "CREATE SESSION REQUEST : FAILED");
                         }
                     }
                     break;
@@ -48,15 +43,13 @@ function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
                     }
                     break;
                 default: {
-                    let fClient = wsClientList.find(c => c.name === imsg.destination && c.channel === wsChanne);
-                    if (fClient) {
-                        fClient.ws.send(JSON.stringify(imsg)); // the REQUEST packet will be sent to SLAVE as it is
-                        console.log(`Request Sent to ${imsg.destination} from ${wsName} on [${wsChanne}]`);
+                    let salveClient = findSlaveWithName(imsg.destination);
+                    if (salveClient) {
+                        messageSender(imsg, salveClient.ws, "REQUEST");
                     }
                     else {
-                        var rep = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, "Request Failed, Destination Not Found!", wsName);
-                        socket.send(JSON.stringify(rep));
-                        console.log(`Response Sent to  ${wsName} : Request Failed, Destination Not Found!`);
+                        var failedRep = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, "Request Failed, Destination Not Found!", wsName);
+                        messageSender(failedRep, socket, "REQUEST : FAILED");
                     }
                     break;
                 }
@@ -93,6 +86,18 @@ function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
         // });
         default:
             break;
+    }
+    function findSlaveWithName(slavename) {
+        return wsClientList.find(c => c.name === slavename && c.channel === wsChanne);
+    }
+    function findSlaveOnChannel() {
+        return wsClientList.filter(c => c.channel === wsChanne && c.mtype === Modals_1.MemberType.SLAVE);
+    }
+    function messageSender(sm, rsock, logPrefix) {
+        let strmsg = JSON.stringify(sm);
+        rsock.send(strmsg);
+        console.log(`[ ${logPrefix} ] Sent from ${sm.origin} to ${sm.destination} on ${wsChanne} :`);
+        console.log(sm);
     }
 }
 exports.messageWorker = messageWorker;
