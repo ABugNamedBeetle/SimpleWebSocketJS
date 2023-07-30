@@ -86,6 +86,19 @@ export function messageWorker(imsg: SocketMessage, wsName: string, wsChanne: str
                         }
                         break;
                     }
+
+                    case MessageSubType.SESSIONHEALTH: {
+                        let masterClient = findClientWithName(imsg.destination);
+                        if (masterClient) { 
+                            messageSender(imsg, masterClient.ws, "SESSION HEALTH RESPONSE");
+                            
+                    } else {
+                        var failedRep = new SocketMessage(MessageType.RESPONSE, "Session Health Response Failed, Destination Not Found!", wsName);
+                        messageSender(failedRep, socket, "SESSION HEALTH RESPONSE : FAILED")
+                     }
+                           
+                        break;
+                    }
                 }
 
                 break;
@@ -111,6 +124,10 @@ export function messageWorker(imsg: SocketMessage, wsName: string, wsChanne: str
         }
 
         function findSlaveWithName(slavename: string){
+            return wsClientList.find(c => c.name === slavename && c.channel === wsChanne);
+        }
+
+        function findClientWithName(slavename: string){
             return wsClientList.find(c => c.name === slavename && c.channel === wsChanne);
         }
 

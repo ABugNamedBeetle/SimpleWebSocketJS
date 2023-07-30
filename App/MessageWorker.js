@@ -71,6 +71,17 @@ function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
                         }
                         break;
                     }
+                    case Modals_1.MessageSubType.SESSIONHEALTH: {
+                        let masterClient = findClientWithName(imsg.destination);
+                        if (masterClient) {
+                            messageSender(imsg, masterClient.ws, "SESSION HEALTH RESPONSE");
+                        }
+                        else {
+                            var failedRep = new Modals_1.SocketMessage(Modals_1.MessageType.RESPONSE, "Session Health Response Failed, Destination Not Found!", wsName);
+                            messageSender(failedRep, socket, "SESSION HEALTH RESPONSE : FAILED");
+                        }
+                        break;
+                    }
                 }
                 break;
             }
@@ -88,6 +99,9 @@ function messageWorker(imsg, wsName, wsChanne, socket, wsClientList) {
             break;
     }
     function findSlaveWithName(slavename) {
+        return wsClientList.find(c => c.name === slavename && c.channel === wsChanne);
+    }
+    function findClientWithName(slavename) {
         return wsClientList.find(c => c.name === slavename && c.channel === wsChanne);
     }
     function findSlaveOnChannel() {
